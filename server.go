@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/mxAge18/golang-gin-poc/controller"
+	"github.com/mxAge18/golang-gin-poc/middlewares"
 	"github.com/mxAge18/golang-gin-poc/service"
 )
 
@@ -11,7 +12,8 @@ var(
 	videoController controller.VideoController = controller.New(videoService)
 )
 func main() {
-	server := gin.Default();
+	server := gin.New()
+	server.Use(gin.Logger(), middlewares.Logger())
 	server.GET("/videos", func(ctx *gin.Context) {
 		ctx.JSON(200, videoController.FindAll())
 	})
