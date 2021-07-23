@@ -24,18 +24,30 @@ func setupLogOutput() {
 func main() {
 	setupLogOutput()
 	server := gin.New()
-	server.Use(gin.Recovery(), middlewares.Logger(),
-	middlewares.BasicAuth(), ginDump.Dump())
-	server.GET("/videos", func(ctx *gin.Context) {
-		ctx.JSON(200, videoController.FindAll())
-	})
-	server.POST("/videos", func(ctx *gin.Context) {
-		err := videoController.Save(ctx)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{ "error": err.Error()})
-		} else {
-			ctx.JSON(http.StatusAccepted, gin.H{ "message": "video input is valid"})
-		}
-	})
+	server.Static("/css", "./templates/css")
+	server.LoadHTMLGlob("templates/*.html")
+
+	server.Use(gin.Recovery(), middlewares.Logger())
+	apiRoutes := server.Group("/api")
+	{
+		server.Use(middlewares.BasicAuth(), ginDump.Dump())
+		apiRoutes.GET("/videos", func(ctx *gin.Context) {
+			ctx.JSON(200, videoController.FindAll())
+		})
+		apiRoutes.POST("/videos", func(ctx *gin.Context) {
+			err := videoController.Save(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{ "error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusAccepted, gin.H{ "message": "video input is valid"})
+			}
+		})
+	}
+
+	viewRoutes := server.Group("/view")
+	{
+		viewRoutes.GET("/videos", videoController.ShowAll)
+	}
+
 	server.Run(":9090") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
