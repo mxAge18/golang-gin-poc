@@ -15,6 +15,9 @@ import (
 var(
 	videoService service.VideoService = service.New()
 	videoController controller.VideoController = controller.New(videoService)
+	loginService service.LoginService = service.NewLoginService()
+	jwtService service.JwtService = service.NewJWTService()
+	loginController controller.LoginController = controller.NewLoginController(loginService, jwtService)
 )
 func setupLogOutput() {
 	f, _ := os.Create("gin.log")
@@ -28,9 +31,18 @@ func main() {
 	server.LoadHTMLGlob("templates/*.html")
 
 	server.Use(gin.Recovery(), middlewares.Logger())
-	apiRoutes := server.Group("/api")
+	server.POST("/login", func(ctx *gin.Context) {
+		token := loginController.Login(ctx)
+		if token != "" {
+			ctx.JSON(http.StatusOK, gin.H{
+				"token": token,
+			})
+		} else {
+			ctx.JSON(http.StatusUnauthorized, nil)
+		}
+	})
+	apiRoutes := server.Group("/api", middlewares.AuthorizeJWT(), ginDump.Dump())
 	{
-		server.Use(middlewares.BasicAuth(), ginDump.Dump())
 		apiRoutes.GET("/videos", func(ctx *gin.Context) {
 			ctx.JSON(200, videoController.FindAll())
 		})
