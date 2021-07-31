@@ -8,12 +8,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mxAge18/golang-gin-poc/controller"
 	"github.com/mxAge18/golang-gin-poc/middlewares"
+	"github.com/mxAge18/golang-gin-poc/repository"
 	"github.com/mxAge18/golang-gin-poc/service"
 	ginDump "github.com/tpkeeper/gin-dump"
 )
 
 var(
-	videoService service.VideoService = service.New()
+	repoService repository.VideoRepository = repository.NewVideoRepostory()
+	videoService service.VideoService = service.New(repoService)
 	videoController controller.VideoController = controller.New(videoService)
 	loginService service.LoginService = service.NewLoginService()
 	jwtService service.JwtService = service.NewJWTService()
@@ -52,6 +54,22 @@ func main() {
 				ctx.JSON(http.StatusBadRequest, gin.H{ "error": err.Error()})
 			} else {
 				ctx.JSON(http.StatusAccepted, gin.H{ "message": "video input is valid"})
+			}
+		})
+		apiRoutes.PUT("/videos/:id", func(c *gin.Context) {
+			err := videoController.Update(c)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{ "error": err.Error()})
+			} else {
+				c.JSON(http.StatusAccepted, gin.H{ "message": "video is updated"})
+			}
+		})
+		apiRoutes.DELETE("/videos/:id", func(c *gin.Context) {
+			err := videoController.Delete(c)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{ "error": err.Error()})
+			} else {
+				c.JSON(http.StatusAccepted, gin.H{ "message": "video is deleted"})
 			}
 		})
 	}
