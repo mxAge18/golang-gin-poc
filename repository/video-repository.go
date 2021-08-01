@@ -2,8 +2,11 @@ package repository
 
 import (
 	"github.com/mxAge18/golang-gin-poc/entity"
-	"gorm.io/gorm"
-	"gorm.io/driver/sqlite"
+	// "gorm.io/gorm"
+	// "gorm.io/driver/sqlite"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
+
 )
 
 
@@ -19,10 +22,11 @@ type database struct {
 }
 
 func NewVideoRepostory() VideoRepository {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	db, err := gorm.Open("sqlite3", "test.db")
 	if err != nil {
-		panic("Fail to connect database")
+		panic("Failed to connect database")
 	}
+
 	db.AutoMigrate(&entity.Video{}, &entity.Person{})
 	return &database{
 		connection: db,
